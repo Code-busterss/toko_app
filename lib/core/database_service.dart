@@ -49,6 +49,7 @@ class DatabaseService {
         supplierId INTEGER,
         tax REAL DEFAULT 0.0,
         discount REAL DEFAULT 0.0,
+        imagePath TEXT,
         createdAt TEXT
       )
     ''');

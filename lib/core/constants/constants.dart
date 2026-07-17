@@ -104,6 +104,7 @@ class AppConstants {
   static const String routeOrderEdit = '/orders/:id/edit';
   static const String routePayments = '/payments';
   static const String routePaymentAdd = '/payments/add';
+  static const String routeReceivePayment = '/payments/receive';
   static const String routePurchases = '/purchases';
   static const String routePurchaseDetail = '/purchases/:id';
   static const String routePurchaseAdd = '/purchases/add';

@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:path_provider/path_provider.dart';
 import 'package:toko_app/core/database_service.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/features/products/repositories/product_repository.dart';
@@ -16,7 +19,7 @@ class AddProductState {
   final String? selectedBrand;
   final String? selectedUnit;
   final int? selectedSupplierId;
-  final File? productImage;
+  final String? savedImagePath; // Changed from File? productImage to store path
   final List<String> categories;
   final List<String> units;
   final List<Map<String, dynamic>> suppliers;
@@ -30,7 +33,7 @@ class AddProductState {
     this.selectedBrand,
     this.selectedUnit,
     this.selectedSupplierId,
-    this.productImage,
+    this.savedImagePath,
     this.categories = const [],
     this.units = const [],
     this.suppliers = const [],
@@ -45,7 +48,7 @@ class AddProductState {
     String? selectedBrand,
     String? selectedUnit,
     int? selectedSupplierId,
-    File? productImage,
+    String? savedImagePath,
     List<String>? categories,
     List<String>? units,
     List<Map<String, dynamic>>? suppliers,
@@ -59,7 +62,7 @@ class AddProductState {
       selectedBrand: selectedBrand ?? this.selectedBrand,
       selectedUnit: selectedUnit ?? this.selectedUnit,
       selectedSupplierId: selectedSupplierId ?? this.selectedSupplierId,
-      productImage: productImage ?? this.productImage,
+      savedImagePath: savedImagePath ?? this.savedImagePath,
       categories: categories ?? this.categories,
       units: units ?? this.units,
       suppliers: suppliers ?? this.suppliers,
@@ -115,19 +118,56 @@ class AddProductNotifier extends StateNotifier<AddProductState> {
     try {
       final image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 80,
+        imageQuality: 50, // Reduced quality for smaller file size
       );
 
       if (image != null) {
-        state = state.copyWith(productImage: File(image.path));
+        // Compress and save the image locally
+        final compressedImagePath = await _compressAndSaveImage(image.path);
+        state = state.copyWith(savedImagePath: compressedImagePath);
       }
     } catch (e) {
       state = state.copyWith(errorMessage: 'Error picking image: $e');
     }
   }
 
+  Future<String> _compressAndSaveImage(String imagePath) async {
+    try {
+      // Get the app documents directory
+      final appDir = await getApplicationDocumentsDirectory();
+      final imagesDir = Directory('${appDir.path}/product_images');
+      
+      // Create directory if it doesn't exist
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
+      }
+
+      // Generate unique filename
+      final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final outputPath = '${imagesDir.path}/$fileName';
+
+      // Compress image with flutter_image_compress
+      final result = await FlutterImageCompress.compressAndGetFile(
+        imagePath,
+        outputPath,
+        quality: 60, // Low quality for small file size
+        minWidth: 300, // Resize to small width
+        minHeight: 300, // Resize to small height
+        format: CompressFormat.jpeg,
+      );
+
+      if (result == null) {
+        throw Exception('Failed to compress image');
+      }
+
+      return result.path;
+    } catch (e) {
+      throw Exception('Error compressing image: $e');
+    }
+  }
+
   void clearImage() {
-    state = state.copyWith(productImage: null);
+    state = state.copyWith(savedImagePath: null);
   }
 
   void startGeneratingSku() {

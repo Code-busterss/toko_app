@@ -23,6 +23,9 @@ import 'package:toko_app/features/orders/models/order_model.dart';
 import 'package:toko_app/features/payments/screens/receive_payment_screen.dart';
 import 'package:toko_app/features/payments/screens/credit_ledger_screen.dart';
 import 'package:toko_app/features/settings/screens/pin_settings_screen.dart';
+import 'package:toko_app/features/settings/screens/profile_screen.dart';
+import 'package:toko_app/features/settings/screens/backup_restore_screen.dart';
+import 'package:toko_app/features/settings/screens/settings_screen.dart';
 import 'package:toko_app/shared/widgets/main_shell.dart';
 
 class _ComingSoonScreen extends StatelessWidget {
@@ -111,7 +114,7 @@ class AppRouter {
           ),
           GoRoute(
             path: AppConstants.routeSettings,
-            builder: (context, state) => const _ComingSoonScreen('Settings'),
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),
@@ -185,6 +188,13 @@ class AppRouter {
       ),
       GoRoute(
         path: AppConstants.routePaymentAdd,
+        builder: (context, state) {
+          final customerId = state.extra as int?;
+          return ReceivePaymentScreen(initialCustomerId: customerId);
+        },
+      ),
+      GoRoute(
+        path: AppConstants.routeReceivePayment,
         builder: (context, state) {
           final customerId = state.extra as int?;
           return ReceivePaymentScreen(initialCustomerId: customerId);
@@ -296,12 +306,11 @@ class AppRouter {
       ),
       GoRoute(
         path: AppConstants.routeProfile,
-        builder: (context, state) => const _ComingSoonScreen('Profile'),
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: AppConstants.routeBackupRestore,
-        builder: (context, state) =>
-            const _ComingSoonScreen('Backup & Restore'),
+        builder: (context, state) => const BackupRestoreScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
