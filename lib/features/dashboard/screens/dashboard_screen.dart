@@ -316,7 +316,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     icon: Icons.person_add,
                     label: 'Add Customer',
                     color: Colors.purple,
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppConstants.routeCustomerAdd).then((result) {
+                        if (result == true) {
+                          ref.read(dashboardNotifierProvider.notifier).fetchStats();
+                        }
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -326,7 +332,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     icon: Icons.payment,
                     label: 'Receive Payment',
                     color: Colors.orange,
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppConstants.routeReceivePayment).then((result) {
+                        if (result == true) {
+                          ref.read(dashboardNotifierProvider.notifier).fetchStats();
+                        }
+                      });
+                    },
                   ),
                 ),
               ],

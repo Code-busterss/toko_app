@@ -16,6 +16,7 @@ class Product {
   int? supplierId;
   double tax;
   double discount;
+  String? imagePath; // Added for storing compressed image path
   DateTime? createdAt;
 
   Product({
@@ -34,6 +35,7 @@ class Product {
     this.supplierId,
     this.tax = 0.0,
     this.discount = 0.0,
+    this.imagePath,
     this.createdAt,
   });
 
@@ -54,6 +56,7 @@ class Product {
       'supplierId': supplierId,
       'tax': tax,
       'discount': discount,
+      'imagePath': imagePath,
       'createdAt': (createdAt ?? DateTime.now()).toIso8601String(),
     };
   }
@@ -75,6 +78,7 @@ class Product {
       supplierId: map['supplierId'] as int?,
       tax: (map['tax'] as num?)?.toDouble() ?? 0.0,
       discount: (map['discount'] as num?)?.toDouble() ?? 0.0,
+      imagePath: map['imagePath'] as String?,
       createdAt: map['createdAt'] == null
           ? null
           : DateTime.tryParse(map['createdAt'] as String),
@@ -97,6 +101,7 @@ class Product {
     int? supplierId,
     double? tax,
     double? discount,
+    String? imagePath,
     DateTime? createdAt,
   }) {
     return Product(
@@ -115,6 +120,7 @@ class Product {
       supplierId: supplierId ?? this.supplierId,
       tax: tax ?? this.tax,
       discount: discount ?? this.discount,
+      imagePath: imagePath ?? this.imagePath,
       createdAt: createdAt ?? this.createdAt,
     );
   }

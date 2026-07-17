@@ -1,4 +1,5 @@
 ﻿// lib/features/products/screens/add_product_screen.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -166,6 +167,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         supplierId: state.selectedSupplierId,
         tax: double.tryParse(_taxController.text) ?? 0.0,
         discount: double.tryParse(_discountController.text) ?? 0.0,
+        imagePath: state.savedImagePath, // Include the compressed image path
       );
 
       if (widget.existingProduct != null) {
@@ -269,8 +271,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         onTap: _pickImage,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 150,
-          height: 150,
+          width: 100, // Reduced size for smaller display
+          height: 100, // Reduced size for smaller display
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).round()),
             borderRadius: BorderRadius.circular(12),
@@ -279,11 +281,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               width: 2,
             ),
           ),
-          child: state.productImage != null
+          child: state.savedImagePath != null
               ? ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.file(
-              state.productImage!,
+              File(state.savedImagePath!),
               fit: BoxFit.cover,
             ),
           )
@@ -292,15 +294,16 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             children: [
               Icon(
                 Icons.add_a_photo,
-                size: 48,
+                size: 36, // Smaller icon
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 'Add Image',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
+                  fontSize: 12, // Smaller text
                 ),
               ),
             ],

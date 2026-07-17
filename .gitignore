@@ -1,49 +1,73 @@
 ```
 # Dependencies
 .dart_tool/
-.build/
-dependencies/
+.packages
+.pub/
+pubspec.lock
 
-# Logs and temp files
+# Build
+build/
+**/generated_plugin_registrant.dart
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
-*.tmp
-*.swp
+**/logs/
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Editors
-.idea/
-.vscode/
-*.iml
-*.nib
+# Coverage
+coverage/
+
+# Temporary files
+*.tmp
 *.swp
 *.swo
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Compiled files
+*.class
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
-# Build outputs
-build/
-dist/
-out/
-target/
-
-# Testing
-coverage/
-*.gcda
-*.gcno
-
-# Flutter specific
-**/ios/.generated/
-**/android/.generated/
-**/lib/generated_plugin_registrant.dart
+# Archives
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```
