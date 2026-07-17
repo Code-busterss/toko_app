@@ -101,9 +101,9 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                     children: errors
                         .take(10)
                         .map((e) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              child: Text('• $e', style: const TextStyle(fontSize: 12)),
-                            ))
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text('• $e', style: const TextStyle(fontSize: 12)),
+                    ))
                         .toList(),
                   ),
                 ),
@@ -176,8 +176,8 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                 Text(
                   'Import Summary',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _buildSummaryRow('Total Rows', '${result.totalRows}'),
@@ -186,7 +186,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                   '${result.successCount}',
                   color: Colors.green,
                 ),
-                if (result.hasErrors)
+                if (result.errors.isNotEmpty)
                   _buildSummaryRow(
                     'Errors',
                     '${result.errors.length}',
@@ -198,137 +198,22 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                 Text(
                   'Selected: ${_selectedProducts.length} of ${result.products.length}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
-            ),
-          ),
-
-          // Checkbox header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: allSelected,
-                  onChanged: _toggleSelectAll,
-                ),
-                const Expanded(
-                  child: Text(
-                    'Select All',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.w600,
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // Product list
-          Expanded(
-            child: ListView.builder(
-              itemCount: result.products.length,
-              itemBuilder: (context, index) {
-                final product = result.products[index];
-                final isSelected = _selectedProducts.any(
-                  (p) => p.name == product.name && p.sku == product.sku,
-                );
-
-                return CheckboxListTile(
-                  value: isSelected,
-                  onChanged: (value) => _toggleProduct(product, value),
-                  title: Text(product.name),
-                  subtitle: Text(
-                    [
-                      if (product.sku.isNotEmpty) 'SKU: ${product.sku}',
-                      if (product.barcode.isNotEmpty) 'Barcode: ${product.barcode}',
-                    ].join(' • '),
-                  ),
-                  secondary: Text(
-                    '${AppConstants.currencySymbol}${product.price.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Bottom bar
-          if (_isSaving)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 12),
-                  Text('Saving products...'),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: color ?? Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-                      ),
                 ),
               ],
             ),
           ),
 
           // Errors section
-          if (result.hasErrors)
+          if (result.errors.isNotEmpty)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1), // FIXED: Replaced withOpacity
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)), // FIXED: Replaced withOpacity
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,9 +239,9 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: result.errors
                             .map((e) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2),
-                                  child: Text('• $e', style: const TextStyle(fontSize: 12)),
-                                ))
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text('• $e', style: const TextStyle(fontSize: 12)),
+                        ))
                             .toList(),
                       ),
                     ),
@@ -394,19 +279,19 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
           Expanded(
             child: result.products.isEmpty
                 ? const Center(
-                    child: Text('No valid products to import'),
-                  )
+              child: Text('No valid products to import'),
+            )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: result.products.length,
-                    itemBuilder: (context, index) {
-                      final product = result.products[index];
-                      final isSelected = _selectedProducts.any(
-                        (p) => p.name == product.name && p.sku == product.sku,
-                      );
-                      return _buildProductPreview(context, product, isSelected);
-                    },
-                  ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: result.products.length,
+              itemBuilder: (context, index) {
+                final product = result.products[index];
+                final isSelected = _selectedProducts.any(
+                      (p) => p.name == product.name && p.sku == product.sku,
+                );
+                return _buildProductPreview(context, product, isSelected);
+              },
+            ),
           ),
 
           // Save button
@@ -424,10 +309,10 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                   onPressed: _isSaving ? null : _saveProducts,
                   icon: _isSaving
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
                       : const Icon(Icons.save),
                   label: Text(
                     _isSaving
@@ -466,11 +351,14 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
   }
 
   Widget _buildProductPreview(BuildContext context, Product product, bool isSelected) {
+    // FIXED: Use sellingPrice directly
+    final priceValue = product.sellingPrice;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: isSelected ? 2 : 0,
       color: isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+          ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
           : null,
       child: CheckboxListTile(
         value: isSelected,
@@ -495,7 +383,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                 if (product.sku != null && product.sku!.isNotEmpty)
                   const SizedBox(width: 12),
                 Text(
-                  '${AppConstants.currencySymbol}${product.sellingPrice.toStringAsFixed(0)}',
+                  '${AppConstants.currencySymbol}${priceValue.toStringAsFixed(0)}',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
@@ -507,7 +395,8 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
             const SizedBox(height: 4),
             Row(
               children: [
-                _buildChip(product.category ?? 'No Category', Colors.blue),
+                if (product.category != null)
+                  _buildChip(product.category!, Colors.blue),
                 const SizedBox(width: 4),
                 _buildChip('Stock: ${product.stock}', Colors.green),
                 const SizedBox(width: 4),
@@ -527,7 +416,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

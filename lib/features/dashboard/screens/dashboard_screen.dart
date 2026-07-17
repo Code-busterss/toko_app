@@ -179,7 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: Text(
                     title,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -255,7 +255,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       ),
                     ),
                   ],
@@ -350,9 +350,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -408,7 +408,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: statusColor.withOpacity(0.1),
+        backgroundColor: statusColor.withValues(alpha: 0.1),
         child: Icon(Icons.shopping_bag, color: statusColor),
       ),
       title: Text(
@@ -430,7 +430,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -506,7 +506,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: stockColor.withOpacity(0.1),
+        backgroundColor: stockColor.withValues(alpha: 0.1),
         child: Icon(Icons.inventory, color: stockColor),
       ),
       title: Text(

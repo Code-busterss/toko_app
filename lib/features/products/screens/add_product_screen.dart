@@ -1,10 +1,8 @@
 ﻿// lib/features/products/screens/add_product_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io';
-import 'package:toko_app/core/constants/constants.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/features/products/repositories/product_repository.dart';
 import 'package:toko_app/features/products/providers/add_product_notifier.dart';
@@ -21,7 +19,6 @@ class AddProductScreen extends ConsumerStatefulWidget {
 class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _productRepository = ProductRepository();
-  final _imagePicker = ImagePicker();
 
   final _nameController = TextEditingController();
   final _skuController = TextEditingController();
@@ -58,7 +55,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _descriptionController.text = '';
     _taxController.text = product.tax.toString();
     _discountController.text = product.discount.toString();
-    
+
     final notifier = ref.read(addProductNotifierProvider.notifier);
     notifier.setSelectedCategory(product.category);
     notifier.setSelectedBrand(product.brand);
@@ -83,7 +80,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    await ref.read(addProductNotifierProvider.notifier).pickImage();
+    final notifier = ref.read(addProductNotifierProvider.notifier);
+    await notifier.pickImage();
   }
 
   Future<void> _scanBarcode() async {
@@ -210,7 +208,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(addProductNotifierProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.existingProduct != null ? 'Edit Product' : 'Add Product'),
@@ -244,7 +242,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             const SizedBox(height: 24),
             _buildPricingSection(),
             const SizedBox(height: 24),
-            _buildInventorySection(),
+            _buildInventorySection(state), // FIXED: Added state parameter
             const SizedBox(height: 24),
             _buildAdditionalInfoSection(state),
             const SizedBox(height: 32),
@@ -389,7 +387,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: state.selectedCategory,
+                    initialValue: state.selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category',
                       prefixIcon: Icon(Icons.category),
@@ -580,7 +578,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: state.selectedUnit,
+              initialValue: state.selectedUnit,
               decoration: const InputDecoration(
                 labelText: 'Unit *',
                 prefixIcon: Icon(Icons.straighten),
@@ -671,7 +669,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              value: state.selectedSupplierId,
+              initialValue: state.selectedSupplierId,
               decoration: const InputDecoration(
                 labelText: 'Supplier',
                 prefixIcon: Icon(Icons.supervisor_account),
