@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "792071942879",
+    "project_id": "toko-app-28a5b",
+    "storage_bucket": "toko-app-28a5b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792071942879:android:ee5cccaf652624adf7af6a",
+        "android_client_info": {
+          "package_name": "com.toko.app.toko_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWyTIF9DHHss83InAV0dW03cPovGHHDuo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
