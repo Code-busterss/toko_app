@@ -15,6 +15,7 @@ import 'package:toko_app/features/brands/screens/brands_screen.dart';
 import 'package:toko_app/features/customers/screens/customer_list_screen.dart';
 import 'package:toko_app/features/customers/screens/customer_detail_screen.dart';
 import 'package:toko_app/features/customers/screens/add_customer_screen.dart';
+import 'package:toko_app/features/customers/models/customer_model.dart';
 import 'package:toko_app/features/orders/screens/create_order_screen.dart';
 import 'package:toko_app/features/orders/screens/orders_list_screen.dart';
 import 'package:toko_app/features/orders/screens/invoice_preview_screen.dart';
@@ -148,7 +149,10 @@ class AppRouter {
       ),
       GoRoute(
         path: AppConstants.routeCustomerEdit,
-        builder: (context, state) => const AddCustomerScreen(),
+        builder: (context, state) {
+          final customer = state.extra as Customer?;
+          return AddCustomerScreen(existingCustomer: customer);
+        },
       ),
       GoRoute(
         path: '/credit-ledger/:id',

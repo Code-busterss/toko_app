@@ -1,22 +1,26 @@
 ```
 # Dependencies
 .dart_tool/
-.packages
-.pub/
+.build/
+dependencies/
 
-# Build
-build/
-**/ios/.generated/
-**/android/.generated/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Logs
-*.log
-**/logs
+# Editors
+.idea/
+.vscode/
+*.iml
+*.nib
+*.swp
+*.swo
 
 # OS generated files
 .DS_Store
@@ -27,17 +31,19 @@ build/
 ehthumbs.db
 Thumbs.db
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
+# Build outputs
+build/
+dist/
+out/
+target/
 
-# Coverage
+# Testing
 coverage/
-*.coverage
+*.gcda
+*.gcno
 
-# Temporary files
-*.tmp
-*.temp
+# Flutter specific
+**/ios/.generated/
+**/android/.generated/
+**/lib/generated_plugin_registrant.dart
 ```
