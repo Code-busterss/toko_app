@@ -39,7 +39,7 @@ class _ComingSoonScreen extends StatelessWidget {
             Icon(
               Icons.construction,
               size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.headlineMedium),
@@ -50,7 +50,7 @@ class _ComingSoonScreen extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurface
-                        .withOpacity(0.6),
+                        .withValues(alpha: 0.6),
                   ),
             ),
           ],

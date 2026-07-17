@@ -102,6 +102,7 @@ class AppConstants {
   static const String routeOrderDetail = '/orders/:id';
   static const String routeOrderAdd = '/orders/add';
   static const String routeOrderEdit = '/orders/:id/edit';
+  static const String routeCreateOrder = '/orders/create';
   static const String routePayments = '/payments';
   static const String routePaymentAdd = '/payments/add';
   static const String routePurchases = '/purchases';
@@ -135,4 +136,9 @@ class AppConstants {
   static const String routeNotifications = '/notifications';
   static const String routeSearch = '/search';
   static const String routeProfitLoss = '/reports/profit-loss';
+  static const String routeBarcodeScanner = '/barcode-scanner';
+  static const String routeBarcodeDetail = '/barcode-detail';
+  static const String routeImportPreview = '/import-preview';
+  static const String routeAddProduct = '/products/add';
+  static const String routeEditProduct = '/products/:id/edit';
 }

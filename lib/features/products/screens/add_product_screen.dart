@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'dart:io';
 import 'package:toko_app/core/constants/constants.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
@@ -389,7 +390,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: state.selectedCategory,
+                    initialValue: state.selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category',
                       prefixIcon: Icon(Icons.category),
@@ -580,7 +581,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: state.selectedUnit,
+              initialValue: state.selectedUnit,
               decoration: const InputDecoration(
                 labelText: 'Unit *',
                 prefixIcon: Icon(Icons.straighten),
@@ -671,7 +672,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              value: state.selectedSupplierId,
+              initialValue: state.selectedSupplierId,
               decoration: const InputDecoration(
                 labelText: 'Supplier',
                 prefixIcon: Icon(Icons.supervisor_account),
