@@ -224,7 +224,7 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -236,7 +236,7 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.6),
+                                            .withValues(alpha: 0.6),
                                       ),
                             ),
                           ],
@@ -281,7 +281,7 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
               backgroundColor: Theme.of(context)
                   .colorScheme
                   .secondary
-                  .withOpacity(0.1),
+                  .withValues(alpha: 0.1),
               child: Icon(
                 Icons.branding_watermark,
                 color: Theme.of(context).colorScheme.secondary,
