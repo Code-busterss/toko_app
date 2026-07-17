@@ -18,7 +18,6 @@ class ReceivePaymentScreen extends ConsumerStatefulWidget {
 }
 
 class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
-  int _currentStep = 0;
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
   final _searchController = TextEditingController();
@@ -49,8 +48,6 @@ class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
         await ref
             .read(receivePaymentNotifierProvider.notifier)
             .selectCustomer(customer);
-        _currentStep = 1;
-        if (mounted) setState(() {});
       }
     });
   }
@@ -64,15 +61,11 @@ class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 2) {
-      setState(() => _currentStep++);
-    }
+    ref.read(receivePaymentNotifierProvider.notifier).nextStep();
   }
 
   void _previousStep() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
-    }
+    ref.read(receivePaymentNotifierProvider.notifier).previousStep();
   }
 
   Future<void> _savePayment() async {
@@ -236,6 +229,8 @@ class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
       }
     });
 
+    final state = ref.watch(receivePaymentNotifierProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receive Payment'),
@@ -275,7 +270,7 @@ class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
         ),
       ),
       body: IndexedStack(
-        index: _currentStep,
+        index: state.currentStep,
         children: [
           _Step1CustomerSelection(
             searchController: _searchController,
@@ -297,23 +292,24 @@ class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
   }
 
   Widget _buildStepIndicator() {
+    final state = ref.watch(receivePaymentNotifierProvider);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          _buildStepDot(0, 'Customer'),
-          _buildStepLine(0),
-          _buildStepDot(1, 'Orders'),
-          _buildStepLine(1),
-          _buildStepDot(2, 'Payment'),
+          _buildStepDot(0, 'Customer', state),
+          _buildStepLine(0, state),
+          _buildStepDot(1, 'Orders', state),
+          _buildStepLine(1, state),
+          _buildStepDot(2, 'Payment', state),
         ],
       ),
     );
   }
 
-  Widget _buildStepDot(int step, String label) {
-    final isActive = _currentStep == step;
-    final isCompleted = _currentStep > step;
+  Widget _buildStepDot(int step, String label, ReceivePaymentState state) {
+    final isActive = state.currentStep == step;
+    final isCompleted = state.currentStep > step;
     final color = isActive
         ? Theme.of(context).colorScheme.primary
         : isCompleted
@@ -354,12 +350,12 @@ class _ReceivePaymentScreenState extends ConsumerState<ReceivePaymentScreen> {
     );
   }
 
-  Widget _buildStepLine(int afterStep) {
+  Widget _buildStepLine(int afterStep, ReceivePaymentState state) {
     return Expanded(
       child: Container(
         height: 2,
         margin: const EdgeInsets.only(bottom: 20),
-        color: _currentStep > afterStep ? Colors.green : Colors.grey.shade300,
+        color: state.currentStep > afterStep ? Colors.green : Colors.grey.shade300,
       ),
     );
   }
@@ -891,6 +887,17 @@ class _Step3PaymentDetailsState extends ConsumerState<_Step3PaymentDetails> {
                       ref
                           .read(receivePaymentNotifierProvider.notifier)
                           .setPaymentAmount(amount);
+                      // Auto-select semantic type based on amount
+                      if (amount >= state.outstandingBalance &&
+                          state.outstandingBalance > 0) {
+                        ref
+                            .read(receivePaymentNotifierProvider.notifier)
+                            .setSemanticType('full');
+                      } else if (amount > 0) {
+                        ref
+                            .read(receivePaymentNotifierProvider.notifier)
+                            .setSemanticType('partial');
+                      }
                     },
                   ),
                   const SizedBox(height: 8),
@@ -928,6 +935,43 @@ class _Step3PaymentDetailsState extends ConsumerState<_Step3PaymentDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Payment Type',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  ToggleButtons(
+                    isSelected: [
+                      state.semanticType == 'full',
+                      state.semanticType == 'partial',
+                      state.semanticType == 'advance',
+                    ],
+                    onPressed: (int index) {
+                      final types = ['full', 'partial', 'advance'];
+                      ref
+                          .read(receivePaymentNotifierProvider.notifier)
+                          .setSemanticType(types[index]);
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    selectedColor: Colors.white,
+                    fillColor: Theme.of(context).colorScheme.primary,
+                    color: Colors.grey.shade700,
+                    borderColor: Colors.grey.shade300,
+                    selectedBorderColor: Theme.of(context).colorScheme.primary,
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('Full Payment'),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('Partial'),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('Advance'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Text('Payment Method',
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
@@ -982,7 +1026,7 @@ class _Step3PaymentDetailsState extends ConsumerState<_Step3PaymentDetails> {
                     controller: widget.notesController,
                     maxLines: 3,
                     decoration: const InputDecoration(
-                      hintText: 'Add payment notes...',
+                      hintText: 'e.g. cash received, bank transfer',
                       prefixIcon: Icon(Icons.notes),
                       alignLabelWithHint: true,
                     ),

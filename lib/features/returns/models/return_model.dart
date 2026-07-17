@@ -34,11 +34,29 @@ class ReturnItem {
   factory ReturnItem.fromMap(Map<String, dynamic> map) {
     return ReturnItem(
       productId: map['productId'] as int?,
-      productName: map['productName'] as String,
-      originalQty: map['originalQty'] as int,
-      returnQty: map['returnQty'] as int,
-      rate: (map['rate'] as num).toDouble(),
-      total: (map['total'] as num).toDouble(),
+      productName: map['productName'] as String? ?? '',
+      originalQty: map['originalQty'] as int? ?? 0,
+      returnQty: map['returnQty'] as int? ?? 0,
+      rate: (map['rate'] as num?)?.toDouble() ?? 0.0,
+      total: (map['total'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  ReturnItem copyWith({
+    int? productId,
+    String? productName,
+    int? originalQty,
+    int? returnQty,
+    double? rate,
+    double? total,
+  }) {
+    return ReturnItem(
+      productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
+      originalQty: originalQty ?? this.originalQty,
+      returnQty: returnQty ?? this.returnQty,
+      rate: rate ?? this.rate,
+      total: total ?? this.total,
     );
   }
 }
@@ -95,24 +113,58 @@ class SalesReturn {
   factory SalesReturn.fromMap(Map<String, dynamic> map) {
     return SalesReturn(
       id: map['id'] as int?,
-      orderId: map['orderId'] as int,
-      invoiceNumber: map['invoiceNumber'] as String,
-      customerId: map['customerId'] as int,
-      customerName: map['customerName'] as String,
+      orderId: map['orderId'] as int? ?? 0,
+      invoiceNumber: map['invoiceNumber'] as String? ?? '',
+      customerId: map['customerId'] as int? ?? 0,
+      customerName: map['customerName'] as String? ?? '',
       items: map['items'] != null
           ? (jsonDecode(map['items']) as List)
               .map((x) => ReturnItem.fromMap(x as Map<String, dynamic>))
               .toList()
           : [],
-      totalAmount: (map['totalAmount'] as num).toDouble(),
-      reason: map['reason'] as String,
+      totalAmount: (map['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      reason: map['reason'] as String? ?? '',
       status: ReturnStatus.values[map['status'] as int? ?? 0],
       refundIssued: (map['refundIssued'] as int?) == 1,
       stockRestored: (map['stockRestored'] as int?) == 1,
-      createdAt: DateTime.parse(map['createdAt'] as String),
+      createdAt: map['createdAt'] != null 
+          ? DateTime.parse(map['createdAt'] as String) 
+          : DateTime.now(),
       completedAt: map['completedAt'] != null
           ? DateTime.parse(map['completedAt'] as String)
           : null,
+    );
+  }
+
+  SalesReturn copyWith({
+    int? id,
+    int? orderId,
+    String? invoiceNumber,
+    int? customerId,
+    String? customerName,
+    List<ReturnItem>? items,
+    double? totalAmount,
+    String? reason,
+    ReturnStatus? status,
+    bool? refundIssued,
+    bool? stockRestored,
+    DateTime? createdAt,
+    DateTime? completedAt,
+  }) {
+    return SalesReturn(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      customerId: customerId ?? this.customerId,
+      customerName: customerName ?? this.customerName,
+      items: items ?? this.items,
+      totalAmount: totalAmount ?? this.totalAmount,
+      reason: reason ?? this.reason,
+      status: status ?? this.status,
+      refundIssued: refundIssued ?? this.refundIssued,
+      stockRestored: stockRestored ?? this.stockRestored,
+      createdAt: createdAt ?? this.createdAt,
+      completedAt: completedAt ?? this.completedAt,
     );
   }
 }

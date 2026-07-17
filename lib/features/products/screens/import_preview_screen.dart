@@ -1,6 +1,7 @@
 ﻿// lib/features/products/screens/import_preview_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:toko_app/core/services/excel_service.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/features/products/providers/product_notifier.dart';
@@ -113,8 +114,8 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context, true);
+              context.pop();
+              context.pop(true);
             },
             child: const Text('Done'),
           ),
@@ -198,6 +199,121 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                   'Selected: ${_selectedProducts.length} of ${result.products.length}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
+
+          // Checkbox header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: allSelected,
+                  onChanged: _toggleSelectAll,
+                ),
+                const Expanded(
+                  child: Text(
+                    'Select All',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Product list
+          Expanded(
+            child: ListView.builder(
+              itemCount: result.products.length,
+              itemBuilder: (context, index) {
+                final product = result.products[index];
+                final isSelected = _selectedProducts.any(
+                  (p) => p.name == product.name && p.sku == product.sku,
+                );
+
+                return CheckboxListTile(
+                  value: isSelected,
+                  onChanged: (value) => _toggleProduct(product, value),
+                  title: Text(product.name),
+                  subtitle: Text(
+                    [
+                      if (product.sku.isNotEmpty) 'SKU: ${product.sku}',
+                      if (product.barcode.isNotEmpty) 'Barcode: ${product.barcode}',
+                    ].join(' • '),
+                  ),
+                  secondary: Text(
+                    '${AppConstants.currencySymbol}${product.price.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Bottom bar
+          if (_isSaving)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Saving products...'),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: color ?? Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
                       ),
                 ),
               ],

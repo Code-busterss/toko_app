@@ -46,9 +46,9 @@ class Customer {
   factory Customer.fromMap(Map<String, dynamic> map) {
     return Customer(
       id: map['id'] as int?,
-      shopName: map['shopName'] as String,
-      ownerName: map['ownerName'] as String,
-      phone: map['phone'] as String,
+      shopName: map['shopName'] as String? ?? '',
+      ownerName: map['ownerName'] as String? ?? '',
+      phone: map['phone'] as String? ?? '',
       whatsapp: map['whatsapp'] as String?,
       address: map['address'] as String?,
       city: map['city'] as String?,
@@ -58,6 +58,34 @@ class Customer {
       createdAt: map['createdAt'] == null
           ? null
           : DateTime.tryParse(map['createdAt'] as String),
+    );
+  }
+
+  Customer copyWith({
+    int? id,
+    String? shopName,
+    String? ownerName,
+    String? phone,
+    String? whatsapp,
+    String? address,
+    String? city,
+    String? email,
+    double? creditLimit,
+    double? previousBalance,
+    DateTime? createdAt,
+  }) {
+    return Customer(
+      id: id ?? this.id,
+      shopName: shopName ?? this.shopName,
+      ownerName: ownerName ?? this.ownerName,
+      phone: phone ?? this.phone,
+      whatsapp: whatsapp ?? this.whatsapp,
+      address: address ?? this.address,
+      city: city ?? this.city,
+      email: email ?? this.email,
+      creditLimit: creditLimit ?? this.creditLimit,
+      previousBalance: previousBalance ?? this.previousBalance,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

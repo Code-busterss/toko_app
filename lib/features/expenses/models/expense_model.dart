@@ -31,13 +31,33 @@ class Expense {
   factory Expense.fromMap(Map<String, dynamic> map) {
     return Expense(
       id: map['id'] as int?,
-      category: map['category'] as String,
-      amount: (map['amount'] as num).toDouble(),
-      date: DateTime.parse(map['date'] as String),
+      category: map['category'] as String? ?? '',
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      date: map['date'] != null 
+          ? DateTime.parse(map['date'] as String) 
+          : DateTime.now(),
       notes: map['notes'] as String?,
       createdAt: map['createdAt'] == null
           ? null
           : DateTime.tryParse(map['createdAt'] as String),
+    );
+  }
+
+  Expense copyWith({
+    int? id,
+    String? category,
+    double? amount,
+    DateTime? date,
+    String? notes,
+    DateTime? createdAt,
+  }) {
+    return Expense(
+      id: id ?? this.id,
+      category: category ?? this.category,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

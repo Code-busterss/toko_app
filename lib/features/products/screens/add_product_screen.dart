@@ -2,10 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:io';
+import 'package:toko_app/core/constants/constants.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/features/products/repositories/product_repository.dart';
+import 'package:toko_app/features/products/providers/add_product_notifier.dart';
 
 class AddProductScreen extends ConsumerStatefulWidget {
   final Product? existingProduct;
@@ -33,36 +35,15 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _taxController = TextEditingController();
   final _discountController = TextEditingController();
 
-  String? _selectedCategory;
-  String? _selectedBrand;
-  String? _selectedUnit;
-  int? _selectedSupplierId;
-  File? _productImage;
-
-  List<String> _categories = [];
-  List<String> _units = [];
-  List<Map<String, dynamic>> _suppliers = [];
-
-  bool _isLoading = false;
-  bool _isGeneratingSku = false;
-
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
-    if (widget.existingProduct != null) {
-      _populateForm(widget.existingProduct!);
-    }
-  }
-
-  Future<void> _loadInitialData() async {
-    _categories = await _productRepository.getCategories();
-    _units = await _productRepository.getUnits();
-    _suppliers = await _productRepository.getSuppliers();
-
-    if (mounted) {
-      setState(() {});
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(addProductNotifierProvider.notifier).loadInitialData();
+      if (widget.existingProduct != null) {
+        _populateForm(widget.existingProduct!);
+      }
+    });
   }
 
   void _populateForm(Product product) {
@@ -77,10 +58,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _descriptionController.text = '';
     _taxController.text = product.tax.toString();
     _discountController.text = product.discount.toString();
-    _selectedCategory = product.category;
-    _selectedBrand = product.brand;
-    _selectedUnit = product.unit;
-    _selectedSupplierId = product.supplierId;
+    
+    final notifier = ref.read(addProductNotifierProvider.notifier);
+    notifier.setSelectedCategory(product.category);
+    notifier.setSelectedBrand(product.brand);
+    notifier.setSelectedUnit(product.unit);
+    notifier.setSelectedSupplierId(product.supplierId);
   }
 
   @override
@@ -100,43 +83,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    try {
-      final image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-      );
-
-      if (image != null) {
-        setState(() {
-          _productImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error picking image: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    await ref.read(addProductNotifierProvider.notifier).pickImage();
   }
 
   Future<void> _scanBarcode() async {
-    final barcode = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (context) => const _BarcodeScannerScreen()),
-    );
+    final barcode = await context.push<String>('/barcode-scanner');
     if (barcode != null && barcode.isNotEmpty && barcode != '-1') {
       _barcodeController.text = barcode;
     }
   }
 
   void _generateSku() {
-    setState(() {
-      _isGeneratingSku = true;
-    });
+    final notifier = ref.read(addProductNotifierProvider.notifier);
+    notifier.startGeneratingSku();
 
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString().substring(8);
     final random = (DateTime.now().second * 17).toString().padLeft(4, '0');
@@ -144,9 +103,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
     _skuController.text = sku;
 
-    setState(() {
-      _isGeneratingSku = false;
-    });
+    notifier.stopGeneratingSku();
   }
 
   Future<void> _showAddCategoryDialog() async {
@@ -165,13 +122,13 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                Navigator.pop(context, controller.text);
+                context.pop(controller.text);
               }
             },
             child: const Text('Add'),
@@ -181,10 +138,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
 
     if (result != null && result.isNotEmpty) {
-      setState(() {
-        _categories.add(result);
-        _selectedCategory = result;
-      });
+      await ref.read(addProductNotifierProvider.notifier).addCategory(result);
     }
   }
 
@@ -193,25 +147,25 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    final notifier = ref.read(addProductNotifierProvider.notifier);
+    notifier.setSaving(true);
 
     try {
+      final state = ref.read(addProductNotifierProvider);
       final product = Product(
         id: widget.existingProduct?.id,
         name: _nameController.text.trim(),
         sku: _skuController.text.trim().isEmpty ? null : _skuController.text.trim(),
         barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
-        category: _selectedCategory,
-        brand: _selectedBrand,
+        category: state.selectedCategory,
+        brand: state.selectedBrand,
         buyingPrice: double.parse(_buyingPriceController.text),
         sellingPrice: double.parse(_sellingPriceController.text),
         wholesalePrice: double.parse(_wholesalePriceController.text),
         stock: int.parse(_stockController.text),
         minStock: int.parse(_minStockController.text),
-        unit: _selectedUnit!,
-        supplierId: _selectedSupplierId,
+        unit: state.selectedUnit!,
+        supplierId: state.selectedSupplierId,
         tax: double.tryParse(_taxController.text) ?? 0.0,
         discount: double.tryParse(_discountController.text) ?? 0.0,
       );
@@ -225,7 +179,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context, true);
+          context.pop(true);
         }
       } else {
         await _productRepository.addProduct(product);
@@ -236,7 +190,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context, true);
+          context.pop(true);
         }
       }
     } catch (e) {
@@ -249,21 +203,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      notifier.setSaving(false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(addProductNotifierProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.existingProduct != null ? 'Edit Product' : 'Add Product'),
         actions: [
-          if (_isLoading)
+          if (state.isSaving)
             const Center(
               child: Padding(
                 padding: EdgeInsets.only(right: 16),
@@ -286,18 +238,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildImagePicker(),
+            _buildImagePicker(state),
             const SizedBox(height: 24),
-            _buildBasicInfoSection(),
+            _buildBasicInfoSection(state),
             const SizedBox(height: 24),
             _buildPricingSection(),
             const SizedBox(height: 24),
             _buildInventorySection(),
             const SizedBox(height: 24),
-            _buildAdditionalInfoSection(),
+            _buildAdditionalInfoSection(state),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: _isLoading ? null : _saveProduct,
+              onPressed: state.isSaving ? null : _saveProduct,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
@@ -313,7 +265,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-  Widget _buildImagePicker() {
+  Widget _buildImagePicker(AddProductState state) {
     return Center(
       child: InkWell(
         onTap: _pickImage,
@@ -329,11 +281,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               width: 2,
             ),
           ),
-          child: _productImage != null
+          child: state.productImage != null
               ? ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.file(
-              _productImage!,
+              state.productImage!,
               fit: BoxFit.cover,
             ),
           )
@@ -360,7 +312,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-  Widget _buildBasicInfoSection() {
+  Widget _buildBasicInfoSection(AddProductState state) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -400,8 +352,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: _isGeneratingSku ? null : _generateSku,
-                  icon: _isGeneratingSku
+                  onPressed: state.isGeneratingSku ? null : _generateSku,
+                  icon: state.isGeneratingSku
                       ? const SizedBox(
                     width: 20,
                     height: 20,
@@ -437,21 +389,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _selectedCategory,
+                    value: state.selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category',
                       prefixIcon: Icon(Icons.category),
                     ),
                     items: [
-                      ..._categories.map((category) => DropdownMenuItem(
+                      ...state.categories.map((category) => DropdownMenuItem(
                         value: category,
                         child: Text(category),
                       )),
                     ],
                     onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
+                      ref.read(addProductNotifierProvider.notifier).setSelectedCategory(value);
                     },
                   ),
                 ),
@@ -465,13 +415,13 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: _selectedBrand,
+              initialValue: state.selectedBrand,
               decoration: const InputDecoration(
                 labelText: 'Brand',
                 prefixIcon: Icon(Icons.branding_watermark),
               ),
               onChanged: (value) {
-                _selectedBrand = value;
+                ref.read(addProductNotifierProvider.notifier).setSelectedBrand(value);
               },
             ),
           ],
@@ -616,7 +566,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-  Widget _buildInventorySection() {
+  Widget _buildInventorySection(AddProductState state) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -630,21 +580,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _selectedUnit,
+              value: state.selectedUnit,
               decoration: const InputDecoration(
                 labelText: 'Unit *',
                 prefixIcon: Icon(Icons.straighten),
               ),
-              items: _units.map((unit) {
+              items: state.units.map((unit) {
                 return DropdownMenuItem(
                   value: unit,
                   child: Text(unit),
                 );
               }).toList(),
               onChanged: (value) {
-                setState(() {
-                  _selectedUnit = value;
-                });
+                ref.read(addProductNotifierProvider.notifier).setSelectedUnit(value);
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -709,7 +657,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-  Widget _buildAdditionalInfoSection() {
+  Widget _buildAdditionalInfoSection(AddProductState state) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -723,14 +671,14 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              initialValue: _selectedSupplierId,
+              value: state.selectedSupplierId,
               decoration: const InputDecoration(
                 labelText: 'Supplier',
                 prefixIcon: Icon(Icons.supervisor_account),
               ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('No Supplier')),
-                ..._suppliers.map((supplier) {
+                ...state.suppliers.map((supplier) {
                   return DropdownMenuItem(
                     value: supplier['id'] as int,
                     child: Text(supplier['name'] as String),
@@ -738,9 +686,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 }),
               ],
               onChanged: (value) {
-                setState(() {
-                  _selectedSupplierId = value;
-                });
+                ref.read(addProductNotifierProvider.notifier).setSelectedSupplierId(value);
               },
             ),
             const SizedBox(height: 16),
@@ -761,14 +707,14 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 }
 
 // Barcode Scanner Screen using mobile_scanner
-class _BarcodeScannerScreen extends StatefulWidget {
+class _BarcodeScannerScreen extends ConsumerStatefulWidget {
   const _BarcodeScannerScreen();
 
   @override
-  State<_BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
+  ConsumerState<_BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
 }
 
-class _BarcodeScannerScreenState extends State<_BarcodeScannerScreen> {
+class _BarcodeScannerScreenState extends ConsumerState<_BarcodeScannerScreen> {
   final MobileScannerController _controller = MobileScannerController(
     formats: [BarcodeFormat.qrCode, BarcodeFormat.code128, BarcodeFormat.ean13],
   );
@@ -787,7 +733,7 @@ class _BarcodeScannerScreenState extends State<_BarcodeScannerScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
@@ -798,7 +744,7 @@ class _BarcodeScannerScreenState extends State<_BarcodeScannerScreen> {
           if (barcodes.isNotEmpty) {
             final barcode = barcodes.first.rawValue;
             if (barcode != null) {
-              Navigator.pop(context, barcode);
+              context.pop(barcode);
             }
           }
         },

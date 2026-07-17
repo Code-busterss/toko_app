@@ -25,7 +25,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -96,6 +96,7 @@ class DatabaseService {
         amount REAL NOT NULL,
         date TEXT NOT NULL,
         notes TEXT,
+        semanticType TEXT,
         type INTEGER NOT NULL,
         createdAt TEXT
       )
@@ -281,6 +282,15 @@ class DatabaseService {
           completedAt TEXT
         )
       ''');
+    }
+
+    // v4 -> add semanticType to payments table
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE payments ADD COLUMN semanticType TEXT');
+      } catch (_) {
+        // Ignore error if column already exists
+      }
     }
   }
 
