@@ -270,6 +270,26 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
       icon = Icons.payment;
     }
 
+    // Determine badge color for semanticType
+    Color? badgeColor;
+    String? badgeText;
+    if (entry.semanticType != null && entry.semanticType!.isNotEmpty) {
+      switch (entry.semanticType) {
+        case 'full':
+          badgeColor = Colors.green;
+          badgeText = 'Full';
+          break;
+        case 'partial':
+          badgeColor = Colors.orange;
+          badgeText = 'Partial';
+          break;
+        case 'advance':
+          badgeColor = Colors.blue;
+          badgeText = 'Advance';
+          break;
+      }
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -287,9 +307,38 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        entry.description,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      Row(
+                        children: [
+                          Text(
+                            entry.description,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          if (badgeText != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: badgeColor!.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: badgeColor.withOpacity(0.5),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                badgeText!,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: badgeColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -307,6 +356,17 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                                   .withOpacity(0.5),
                             ),
                       ),
+                      if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          entry.notes!,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontStyle: FontStyle.italic,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
                 ),

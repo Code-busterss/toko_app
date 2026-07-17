@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 import 'package:toko_app/features/dashboard/providers/dashboard_notifier.dart';
 import 'package:toko_app/features/orders/models/order_model.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/shared/models/app_enums.dart';
 
 import '../../../core/constants/constants.dart';
-import '../../orders/screens/create_order_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -287,12 +287,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     label: 'Make Order',
                     color: Colors.blue,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CreateOrderScreen(),
-                        ),
-                      ).then((result) {
+                      context.push(AppConstants.routeCreateOrder).then((result) {
                         if (result == true) {
                           ref.read(dashboardNotifierProvider.notifier).fetchStats();
                         }

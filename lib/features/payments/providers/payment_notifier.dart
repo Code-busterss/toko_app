@@ -7,6 +7,7 @@ import 'package:toko_app/features/payments/repositories/payment_repository.dart'
 import 'package:toko_app/shared/models/app_enums.dart';
 
 class ReceivePaymentState {
+  final int currentStep;
   final Customer? selectedCustomer;
   final double outstandingBalance;
   final List<Order> unpaidOrders;
@@ -14,6 +15,7 @@ class ReceivePaymentState {
   final double paymentAmount;
   final PaymentMethod paymentMethod;
   final String notes;
+  final String? semanticType; // 'full', 'partial', 'advance'
   final bool isSaving;
   final String? successMessage;
   final String? errorMessage;
@@ -22,6 +24,7 @@ class ReceivePaymentState {
   final bool isLoadingCustomers;
 
   const ReceivePaymentState({
+    this.currentStep = 0,
     this.selectedCustomer,
     this.outstandingBalance = 0.0,
     this.unpaidOrders = const [],
@@ -29,6 +32,7 @@ class ReceivePaymentState {
     this.paymentAmount = 0.0,
     this.paymentMethod = PaymentMethod.cash,
     this.notes = '',
+    this.semanticType,
     this.isSaving = false,
     this.successMessage,
     this.errorMessage,
@@ -38,6 +42,7 @@ class ReceivePaymentState {
   });
 
   ReceivePaymentState copyWith({
+    int? currentStep,
     Customer? selectedCustomer,
     double? outstandingBalance,
     List<Order>? unpaidOrders,
@@ -45,6 +50,7 @@ class ReceivePaymentState {
     double? paymentAmount,
     PaymentMethod? paymentMethod,
     String? notes,
+    String? semanticType,
     bool? isSaving,
     String? successMessage,
     String? errorMessage,
@@ -57,6 +63,7 @@ class ReceivePaymentState {
     bool clearSelectedCustomer = false,
   }) {
     return ReceivePaymentState(
+      currentStep: currentStep ?? this.currentStep,
       selectedCustomer: clearSelectedCustomer
           ? null
           : (selectedCustomer ?? this.selectedCustomer),
@@ -66,6 +73,7 @@ class ReceivePaymentState {
       paymentAmount: paymentAmount ?? this.paymentAmount,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       notes: notes ?? this.notes,
+      semanticType: semanticType ?? this.semanticType,
       isSaving: isSaving ?? this.isSaving,
       successMessage:
           clearSuccess ? null : (successMessage ?? this.successMessage),
@@ -120,6 +128,18 @@ class ReceivePaymentNotifier extends Notifier<ReceivePaymentState> {
     state = state.copyWith(clearError: true, clearSuccess: true);
   }
 
+  void nextStep() {
+    if (state.currentStep < 2) {
+      state = state.copyWith(currentStep: state.currentStep + 1);
+    }
+  }
+
+  void previousStep() {
+    if (state.currentStep > 0) {
+      state = state.copyWith(currentStep: state.currentStep - 1);
+    }
+  }
+
   Future<void> selectCustomer(Customer customer) async {
     state = state.copyWith(
       selectedCustomer: customer,
@@ -129,6 +149,7 @@ class ReceivePaymentNotifier extends Notifier<ReceivePaymentState> {
       clearSavedPayment: true,
       clearSuccess: true,
       clearError: true,
+      currentStep: 1, // Move to step 1 after selecting customer
     );
 
     try {
@@ -194,8 +215,15 @@ class ReceivePaymentNotifier extends Notifier<ReceivePaymentState> {
     state = state.copyWith(notes: notes);
   }
 
+  void setSemanticType(String? semanticType) {
+    state = state.copyWith(semanticType: semanticType);
+  }
+
   void fillFullAmount() {
-    state = state.copyWith(paymentAmount: state.outstandingBalance);
+    state = state.copyWith(
+      paymentAmount: state.outstandingBalance,
+      semanticType: 'full',
+    );
   }
 
   Future<int?> savePayment() async {
@@ -217,12 +245,23 @@ class ReceivePaymentNotifier extends Notifier<ReceivePaymentState> {
     state = state.copyWith(isSaving: true, clearError: true);
 
     try {
+      // Determine semanticType based on payment amount
+      String? semanticType = state.semanticType;
+      if (semanticType == null) {
+        if (state.paymentAmount >= state.outstandingBalance) {
+          semanticType = 'full';
+        } else {
+          semanticType = 'partial';
+        }
+      }
+
       final payment = Payment(
         customerId: state.selectedCustomer!.id!,
         customerName: state.selectedCustomer!.shopName,
         amount: state.paymentAmount,
         date: DateTime.now(),
         notes: state.notes.isEmpty ? null : state.notes,
+        semanticType: semanticType,
         type: PaymentType.incoming,
       );
 

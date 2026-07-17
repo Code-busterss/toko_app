@@ -1,6 +1,8 @@
 ﻿// lib/features/settings/screens/pin_settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:toko_app/core/constants/constants.dart';
 import 'package:toko_app/features/auth/providers/pin_provider.dart';
 import 'package:toko_app/features/auth/screens/pin_lock_screen.dart';
 import 'package:toko_app/features/auth/services/fingerprint_service.dart';
@@ -26,35 +28,53 @@ class _PinSettingsScreenState extends ConsumerState<PinSettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final biometricAvailable = await _fingerprintService.isBiometricAvailable();
-    final pinEnabled = await ref.read(pinServiceProvider).isPinSet();
-    final fingerprintEnabled = await ref.read(pinServiceProvider).isFingerprintEnabled();
+    try {
+      final biometricAvailable = await _fingerprintService.isBiometricAvailable();
+      final pinEnabled = await ref.read(pinServiceProvider).isPinSet();
+      final fingerprintEnabled = await ref.read(pinServiceProvider).isFingerprintEnabled();
 
-    if (mounted) {
-      setState(() {
-        _biometricAvailable = biometricAvailable;
-        _pinEnabled = pinEnabled;
-        _fingerprintEnabled = fingerprintEnabled;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _biometricAvailable = biometricAvailable;
+          _pinEnabled = pinEnabled;
+          _fingerprintEnabled = fingerprintEnabled;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading settings: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   Future<void> _setPin() async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PinLockScreen(isSettingPin: true),
-      ),
-    );
+    try {
+      final result = await context.push<bool>(AppConstants.routePinLock, extra: {'isSettingPin': true});
 
-    if (result == true) {
-      _loadSettings();
+      if (result == true) {
+        await _loadSettings();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('PIN set successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PIN set successfully'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text('Error setting PIN: $e'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -62,32 +82,44 @@ class _PinSettingsScreenState extends ConsumerState<PinSettingsScreen> {
   }
 
   Future<void> _disablePin() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Disable PIN'),
-        content: const Text('Are you sure you want to disable PIN lock?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Disable'),
-          ),
-        ],
-      ),
-    );
+    try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Disable PIN'),
+          content: const Text('Are you sure you want to disable PIN lock?'),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => context.pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Disable'),
+            ),
+          ],
+        ),
+      );
 
-    if (confirm == true) {
-      await ref.read(pinServiceProvider).disablePin();
-      _loadSettings();
+      if (confirm == true) {
+        await ref.read(pinServiceProvider).disablePin();
+        await _loadSettings();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('PIN disabled'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PIN disabled'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -95,10 +127,21 @@ class _PinSettingsScreenState extends ConsumerState<PinSettingsScreen> {
   }
 
   Future<void> _toggleFingerprint(bool value) async {
-    await ref.read(pinServiceProvider).enableFingerprint(value);
-    setState(() {
-      _fingerprintEnabled = value;
-    });
+    try {
+      await ref.read(pinServiceProvider).enableFingerprint(value);
+      setState(() {
+        _fingerprintEnabled = value;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error toggling fingerprint: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:go_router/go_router.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/features/products/providers/product_notifier.dart';
 import 'package:toko_app/features/products/screens/add_product_screen.dart';
@@ -39,10 +40,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   Future<void> _scanBarcode() async {
-    final barcode = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (context) => const _BarcodeScannerScreen()),
-    );
+    final barcode = await context.push<String>(AppConstants.routeBarcodeScanner);
     if (barcode != null && barcode.isNotEmpty && barcode != '-1') {
       final product = await ref
           .read(productNotifierProvider.notifier)
@@ -56,12 +54,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BarcodeScreen(product: product),
-            ),
-          );
+          context.push(AppConstants.routeBarcodeDetail, extra: {'product': product});
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -118,11 +111,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       }
 
       // Navigate to preview screen
-      final refresh = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ImportPreviewScreen(importResult: result),
-        ),
+      final refresh = await context.push<bool>(
+        AppConstants.routeImportPreview,
+        extra: {'importResult': result},
       );
 
       if (refresh == true) {
@@ -401,12 +392,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   void _navigateToAddProduct() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AddProductScreen(),
-      ),
-    ).then((result) {
+    context.push(AppConstants.routeAddProduct).then((result) {
       if (result == true) {
         ref.read(productNotifierProvider.notifier).fetchProducts();
       }
@@ -414,12 +400,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   void _navigateToEditProduct(Product product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddProductScreen(existingProduct: product),
-      ),
-    ).then((result) {
+    context.push(AppConstants.routeEditProduct, extra: {'product': product}).then((result) {
       if (result == true) {
         ref.read(productNotifierProvider.notifier).fetchProducts();
       }
@@ -427,12 +408,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   void _navigateToBarcodeScreen(Product product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BarcodeScreen(product: product),
-      ),
-    );
+    context.push(AppConstants.routeBarcodeDetail, extra: {'product': product});
   }
 
   @override

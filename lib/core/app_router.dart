@@ -83,7 +83,11 @@ class AppRouter {
       ),
       GoRoute(
         path: '/pin-lock',
-        builder: (context, state) => const PinLockScreen(),
+        name: 'pinLock',
+        builder: (context, state) {
+          final isSettingPin = (state.extra as Map<String, dynamic>?)?['isSettingPin'] as bool? ?? false;
+          return PinLockScreen(isSettingPin: isSettingPin);
+        },
       ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),

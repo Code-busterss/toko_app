@@ -144,29 +144,65 @@ class PaymentReceiptService {
         color: PdfColors.grey100,
         borderRadius: pw.BorderRadius.circular(8),
       ),
-      child: pw.Row(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Expanded(
-            child: _buildInfoField(
-              'Receipt No',
-              'PAY-${payment.id}',
-            ),
+          pw.Row(
+            children: [
+              pw.Expanded(
+                child: _buildInfoField(
+                  'Receipt No',
+                  'PAY-${payment.id}',
+                ),
+              ),
+              pw.Expanded(
+                child: _buildInfoField(
+                  'Date',
+                  AppConstants.dateTimeFormat.format(payment.date),
+                ),
+              ),
+              pw.Expanded(
+                child: _buildInfoField(
+                  'Method',
+                  payment.type.name.toUpperCase(),
+                ),
+              ),
+            ],
           ),
-          pw.Expanded(
-            child: _buildInfoField(
-              'Date',
-              AppConstants.dateTimeFormat.format(payment.date),
+          if (payment.semanticType != null && payment.semanticType!.isNotEmpty) ...[
+            pw.SizedBox(height: 8),
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: _buildInfoField(
+                    'Payment Type',
+                    _capitalizeSemanticType(payment.semanticType!),
+                  ),
+                ),
+              ],
             ),
-          ),
-          pw.Expanded(
-            child: _buildInfoField(
-              'Method',
-              payment.type.name.toUpperCase(),
+          ],
+          if (payment.notes != null && payment.notes!.isNotEmpty) ...[
+            pw.SizedBox(height: 8),
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: _buildInfoField(
+                    'Notes',
+                    payment.notes!,
+                  ),
+                ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
+  }
+
+  String _capitalizeSemanticType(String type) {
+    if (type.isEmpty) return '';
+    return type.substring(0, 1).toUpperCase() + type.substring(1);
   }
 
   pw.Widget _buildInfoField(String label, String value) {

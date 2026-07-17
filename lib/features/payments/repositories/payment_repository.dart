@@ -13,6 +13,8 @@ class LedgerEntry {
   final double debit;
   final double credit;
   final double runningBalance;
+  final String? semanticType; // 'full', 'partial', 'advance'
+  final String? notes;
 
   LedgerEntry({
     required this.date,
@@ -22,6 +24,8 @@ class LedgerEntry {
     required this.debit,
     required this.credit,
     required this.runningBalance,
+    this.semanticType,
+    this.notes,
   });
 
   bool get isOrder => type == 'order';
@@ -29,9 +33,37 @@ class LedgerEntry {
 }
 
 class PaymentRepository {
-  Future<int> recordPayment(Payment payment) async {
+  Future<void> recordPayment(Payment payment) async {
     final db = await DatabaseService.instance.database;
-    return await db.insert('payments', payment.toMap());
+    await db.transaction((txn) async {
+      // 1. Insert payment row
+      await txn.insert('payments', payment.toMap());
+
+      // 2. Update customer remainingBalance
+      final customers = await txn.query('customers',
+          where: 'id = ?', whereArgs: [payment.customerId]);
+      if (customers.isNotEmpty) {
+        final current =
+            customers.first['remainingBalance'] as double? ?? 0.0;
+        final newBalance = (current - payment.amount).clamp(0.0, double.infinity);
+        await txn.update('customers', {'remainingBalance': newBalance},
+            where: 'id = ?', whereArgs: [payment.customerId]);
+      }
+
+      // 3. If linked to an order, update order paidAmount
+      if (payment.orderId != null) {
+        final orders = await txn.query('orders',
+            where: 'id = ?', whereArgs: [payment.orderId]);
+        if (orders.isNotEmpty) {
+          final currentPaid =
+              orders.first['paidAmount'] as double? ?? 0.0;
+          final total = orders.first['totalAmount'] as double? ?? 0.0;
+          final newPaid = (currentPaid + payment.amount).clamp(0.0, total);
+          await txn.update('orders', {'paidAmount': newPaid},
+              where: 'id = ?', whereArgs: [payment.orderId]);
+        }
+      }
+    });
   }
 
   /// Atomic: inserts the payment, decrements the customer's previousBalance,
@@ -259,6 +291,8 @@ class PaymentRepository {
         debit: payment.type == PaymentType.outgoing ? payment.amount : 0,
         credit: payment.type == PaymentType.incoming ? payment.amount : 0,
         runningBalance: 0,
+        semanticType: payment.semanticType,
+        notes: payment.notes,
       ));
     }
 
@@ -278,6 +312,8 @@ class PaymentRepository {
         debit: entry.debit,
         credit: entry.credit,
         runningBalance: runningBalance,
+        semanticType: entry.semanticType,
+        notes: entry.notes,
       ));
     }
 

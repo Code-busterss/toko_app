@@ -1,5 +1,7 @@
 ﻿// lib/features/settings/screens/settings_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:toko_app/core/constants/constants.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,7 +19,9 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('Profile'),
             subtitle: const Text('Edit your profile information'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              context.push(AppConstants.routeProfile);
+            },
           ),
           const Divider(),
           ListTile(
@@ -26,7 +30,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('PIN and biometric settings'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.pushNamed(context, '/settings/pin');
+              context.push(AppConstants.routePinSettings);
             },
           ),
           const Divider(),
@@ -36,7 +40,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('Manage product categories'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.pushNamed(context, '/categories');
+              context.push(AppConstants.routeCategories);
             },
           ),
           const Divider(),
@@ -46,7 +50,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('Manage product brands'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Navigator.pushNamed(context, '/brands');
+              context.push(AppConstants.routeBrands);
             },
           ),
           const Divider(),
@@ -55,7 +59,9 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('Backup & Restore'),
             subtitle: const Text('Backup your data'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+            onTap: () {
+              context.push(AppConstants.routeBackupRestore);
+            },
           ),
           const Divider(),
           ListTile(

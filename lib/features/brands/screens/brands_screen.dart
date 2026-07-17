@@ -1,8 +1,9 @@
 ﻿// lib/features/brands/screens/brands_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:toko_app/features/brands/models/brand_model.dart';
-import 'package:toko_app/features/brands/repositories/brand_repository.dart';
+import 'package:toko_app/features/brands/providers/brand_notifier.dart';
 
 class BrandsScreen extends ConsumerStatefulWidget {
   const BrandsScreen({super.key});
@@ -12,52 +13,18 @@ class BrandsScreen extends ConsumerStatefulWidget {
 }
 
 class _BrandsScreenState extends ConsumerState<BrandsScreen> {
-  final _repository = BrandRepository();
   final _searchController = TextEditingController();
-  List<Brand> _allBrands = [];
-  List<Brand> _filteredBrands = [];
-  bool _isLoading = true;
-  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadBrands();
+    ref.read(brandNotifierProvider.notifier).loadBrands();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadBrands() async {
-    setState(() => _isLoading = true);
-    try {
-      _allBrands = await _repository.getAllBrands();
-      _applyFilter();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading brands: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _applyFilter() {
-    if (_searchQuery.isEmpty) {
-      _filteredBrands = List.from(_allBrands);
-    } else {
-      _filteredBrands = _allBrands
-          .where((b) => b.name.toLowerCase().contains(_searchQuery.toLowerCase()))
-          .toList();
-    }
-    setState(() {});
   }
 
   Future<void> _showAddEditDialog({Brand? brand}) async {
@@ -98,8 +65,11 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
               final name = controller.text.trim();
 
               if (brand == null) {
-                final existing = await _repository.getBrandByName(name);
+                final existing = await ref
+                    .read(brandNotifierProvider.notifier)
+                    .getBrandByName(name);
                 if (existing != null) {
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Brand already exists'),
@@ -108,35 +78,34 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
                   );
                   return;
                 }
-                await _repository.addBrand(Brand(
-                  name: name,
-                  createdAt: DateTime.now(),
-                ));
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Brand added'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                await ref.read(brandNotifierProvider.notifier).addBrand(Brand(
+                      name: name,
+                      createdAt: DateTime.now(),
+                    ));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Brand added'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } else {
-                await _repository.updateBrand(Brand(
-                  id: brand.id,
-                  name: name,
-                  createdAt: brand.createdAt,
-                ));
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Brand updated'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                await ref.read(brandNotifierProvider.notifier).updateBrand(Brand(
+                      id: brand.id,
+                      name: name,
+                      createdAt: brand.createdAt,
+                    ));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Brand updated'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               }
 
-              if (mounted) Navigator.pop(context, true);
+              if (!context.mounted) return;
+              Navigator.pop(context, true);
             },
             child: const Text('Save'),
           ),
@@ -144,13 +113,15 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
       ),
     );
 
-    if (result == true) {
-      _loadBrands();
+    if (result == true && mounted) {
+      ref.read(brandNotifierProvider.notifier).loadBrands();
     }
   }
 
   Future<void> _deleteBrand(Brand brand) async {
-    final productCount = await _repository.getProductCountByBrand(brand.name);
+    final productCount = await ref
+        .read(brandNotifierProvider.notifier)
+        .getProductCountByBrand(brand.name);
 
     if (!mounted) return;
 
@@ -192,29 +163,30 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
       ),
     );
 
-    if (confirm == true) {
-      await _repository.deleteBrand(brand.id!);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Brand deleted'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadBrands();
-      }
+    if (confirm == true && mounted) {
+      await ref.read(brandNotifierProvider.notifier).deleteBrand(brand.id!);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Brand deleted'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(brandNotifierProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Brands'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadBrands,
+            onPressed: () =>
+                ref.read(brandNotifierProvider.notifier).loadBrands(),
           ),
         ],
       ),
@@ -232,15 +204,16 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
                 ),
               ),
               onChanged: (value) {
-                _searchQuery = value;
-                _applyFilter();
+                ref
+                    .read(brandNotifierProvider.notifier)
+                    .setSearchQuery(value);
               },
             ),
           ),
           Expanded(
-            child: _isLoading
+            child: state.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _filteredBrands.isEmpty
+                : state.filteredBrands.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -248,25 +221,36 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
                             Icon(
                               Icons.branding_watermark_outlined,
                               size: 80,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              _searchQuery.isEmpty ? 'No brands yet' : 'No brands found',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                  ),
+                              state.searchQuery.isEmpty
+                                  ? 'No brands yet'
+                                  : 'No brands found',
+                              style:
+                                  Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                      ),
                             ),
                           ],
                         ),
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadBrands,
+                        onRefresh: () => ref
+                            .read(brandNotifierProvider.notifier)
+                            .loadBrands(),
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _filteredBrands.length,
+                          itemCount: state.filteredBrands.length,
                           itemBuilder: (context, index) {
-                            final brand = _filteredBrands[index];
+                            final brand = state.filteredBrands[index];
                             return _buildBrandItem(context, brand);
                           },
                         ),
@@ -284,7 +268,9 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
 
   Widget _buildBrandItem(BuildContext context, Brand brand) {
     return FutureBuilder<int>(
-      future: _repository.getProductCountByBrand(brand.name),
+      future: ref
+          .read(brandNotifierProvider.notifier)
+          .getProductCountByBrand(brand.name),
       builder: (context, snapshot) {
         final productCount = snapshot.data ?? 0;
         return Card(
@@ -292,7 +278,10 @@ class _BrandsScreenState extends ConsumerState<BrandsScreen> {
           elevation: 2,
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+              backgroundColor: Theme.of(context)
+                  .colorScheme
+                  .secondary
+                  .withOpacity(0.1),
               child: Icon(
                 Icons.branding_watermark,
                 color: Theme.of(context).colorScheme.secondary,

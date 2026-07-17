@@ -9,6 +9,7 @@ class Payment {
   double amount;
   DateTime date;
   String? notes;
+  String? semanticType; // 'full', 'partial', 'advance'
   PaymentType type;
   DateTime? createdAt;
 
@@ -20,6 +21,7 @@ class Payment {
     required this.amount,
     required this.date,
     this.notes,
+    this.semanticType,
     required this.type,
     this.createdAt,
   });
@@ -33,6 +35,7 @@ class Payment {
       'amount': amount,
       'date': date.toIso8601String(),
       'notes': notes,
+      'semanticType': semanticType,
       'type': type.index,
       'createdAt': (createdAt ?? DateTime.now()).toIso8601String(),
     }..removeWhere((key, v) => v == null && key == 'id');
@@ -47,10 +50,37 @@ class Payment {
       amount: (map['amount'] as num).toDouble(),
       date: DateTime.parse(map['date'] as String),
       notes: map['notes'] as String?,
+      semanticType: map['semanticType'] as String?,
       type: PaymentType.values[map['type'] as int],
       createdAt: map['createdAt'] == null
           ? null
           : DateTime.tryParse(map['createdAt'] as String),
+    );
+  }
+
+  Payment copyWith({
+    int? id,
+    int? orderId,
+    int? customerId,
+    String? customerName,
+    double? amount,
+    DateTime? date,
+    String? notes,
+    String? semanticType,
+    PaymentType? type,
+    DateTime? createdAt,
+  }) {
+    return Payment(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      customerId: customerId ?? this.customerId,
+      customerName: customerName ?? this.customerName,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      notes: notes ?? this.notes,
+      semanticType: semanticType ?? this.semanticType,
+      type: type ?? this.type,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }
