@@ -248,7 +248,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                             Icon(
                               Icons.category_outlined,
                               size: 80,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -256,7 +256,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                                   ? 'No categories yet'
                                   : 'No categories found',
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                   ),
                             ),
                           ],
@@ -294,7 +294,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           elevation: 2,
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               child: Icon(
                 Icons.category,
                 color: Theme.of(context).colorScheme.primary,

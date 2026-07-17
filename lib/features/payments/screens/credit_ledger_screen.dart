@@ -66,7 +66,7 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
         gradient: LinearGradient(
           colors: [
             balanceColor,
-            balanceColor.withOpacity(0.7),
+            balanceColor.withValues(alpha: 0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
@@ -299,7 +299,7 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: color.withOpacity(0.1),
+                  backgroundColor: color.withValues(alpha: 0.1),
                   child: Icon(icon, color: color, size: 20),
                 ),
                 const SizedBox(width: 12),
@@ -321,10 +321,10 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: badgeColor!.withOpacity(0.1),
+                                color: badgeColor!.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: badgeColor.withOpacity(0.5),
+                                  color: badgeColor.withValues(alpha: 0.5),
                                   width: 1,
                                 ),
                               ),
@@ -353,7 +353,7 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                             ),
                       ),
                       if (entry.notes != null && entry.notes!.isNotEmpty) ...[
@@ -395,10 +395,10 @@ class _CreditLedgerScreenState extends ConsumerState<CreditLedgerScreen> {
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: entry.runningBalance > 0
-                            ? Colors.red.withOpacity(0.1)
+                            ? Colors.red.withValues(alpha: 0.1)
                             : entry.runningBalance < 0
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

@@ -7,7 +7,7 @@ import '../../../core/constants/constants.dart';
 class BarcodeState {
   final int quantity;
   final pw.Barcode selectedPdfBarcodeType;
-  final Barcode selectedUiBarcodeType;
+  final pw.Barcode selectedUiBarcodeType;
   final String selectedBarcodeTypeName;
   final bool isLoading;
   final String? errorMessage;
@@ -15,7 +15,7 @@ class BarcodeState {
   BarcodeState({
     this.quantity = 1,
     pw.Barcode? selectedPdfBarcodeType,
-    Barcode? selectedUiBarcodeType,
+    pw.Barcode? selectedUiBarcodeType,
     String? selectedBarcodeTypeName,
     this.isLoading = false,
     this.errorMessage,
@@ -26,7 +26,7 @@ class BarcodeState {
   BarcodeState copyWith({
     int? quantity,
     pw.Barcode? selectedPdfBarcodeType,
-    Barcode? selectedUiBarcodeType,
+    pw.Barcode? selectedUiBarcodeType,
     String? selectedBarcodeTypeName,
     bool? isLoading,
     String? errorMessage,
@@ -69,7 +69,7 @@ class BarcodeNotifier extends StateNotifier<BarcodeState> {
     );
     state = state.copyWith(
       selectedPdfBarcodeType: selected['pdfBarcode'] as pw.Barcode,
-      selectedUiBarcodeType: selected['uiBarcode'] as Barcode,
+      selectedUiBarcodeType: selected['uiBarcode'] as pw.Barcode,
       selectedBarcodeTypeName: typeName,
     );
   }
@@ -84,21 +84,21 @@ class BarcodeNotifier extends StateNotifier<BarcodeState> {
       final ean13 = barcodeTypes.firstWhere((t) => t['name'] == 'EAN 13');
       state = state.copyWith(
         selectedPdfBarcodeType: ean13['pdfBarcode'] as pw.Barcode,
-        selectedUiBarcodeType: ean13['uiBarcode'] as Barcode,
+        selectedUiBarcodeType: ean13['uiBarcode'] as pw.Barcode,
         selectedBarcodeTypeName: 'EAN 13',
       );
     } else if (code.length == 8 && RegExp(r'^\d{8}$').hasMatch(code)) {
       final ean8 = barcodeTypes.firstWhere((t) => t['name'] == 'EAN 8');
       state = state.copyWith(
         selectedPdfBarcodeType: ean8['pdfBarcode'] as pw.Barcode,
-        selectedUiBarcodeType: ean8['uiBarcode'] as Barcode,
+        selectedUiBarcodeType: ean8['uiBarcode'] as pw.Barcode,
         selectedBarcodeTypeName: 'EAN 8',
       );
     } else if (code.length == 12 && RegExp(r'^\d{12}$').hasMatch(code)) {
       final upcA = barcodeTypes.firstWhere((t) => t['name'] == 'UPC A');
       state = state.copyWith(
         selectedPdfBarcodeType: upcA['pdfBarcode'] as pw.Barcode,
-        selectedUiBarcodeType: upcA['uiBarcode'] as Barcode,
+        selectedUiBarcodeType: upcA['uiBarcode'] as pw.Barcode,
         selectedBarcodeTypeName: 'UPC A',
       );
     }

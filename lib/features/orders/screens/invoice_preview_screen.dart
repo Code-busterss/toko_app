@@ -399,7 +399,7 @@ class _InvoicePreviewScreenState extends ConsumerState<InvoicePreviewScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
         ),
         const SizedBox(height: 2),
@@ -421,7 +421,7 @@ class _InvoicePreviewScreenState extends ConsumerState<InvoicePreviewScreen> {
         Text(
           'Bill To:',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
         ),
         const SizedBox(height: 4),
@@ -733,7 +733,7 @@ class _InvoicePreviewScreenState extends ConsumerState<InvoicePreviewScreen> {
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

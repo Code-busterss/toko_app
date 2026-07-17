@@ -192,7 +192,7 @@ class _PinSettingsScreenState extends ConsumerState<PinSettingsScreen> {
             ListTile(
               leading: Icon(
                 Icons.info_outline,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               title: const Text('Biometric not available'),
               subtitle: const Text('Your device does not support biometric authentication'),

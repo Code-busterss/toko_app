@@ -245,7 +245,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                     ].join(' • '),
                   ),
                   secondary: Text(
-                    '${AppConstants.currencySymbol}${product.price.toStringAsFixed(2)}',
+                    '${AppConstants.currencySymbol}${product.sellingPrice.toStringAsFixed(2)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
@@ -265,7 +265,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
@@ -298,7 +298,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
           Text(
             label,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           Text(
@@ -306,7 +306,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
-              color: color ?? Theme.of(context).colorScheme.onSurface,
+              color: color ?? Theme.of(context).colorScheme.onSurface.withValues(alpha: 1.0),
             ),
           ),
         ],
@@ -326,9 +326,9 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,7 +470,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       elevation: isSelected ? 2 : 0,
       color: isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+          ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
           : null,
       child: CheckboxListTile(
         value: isSelected,
@@ -527,7 +527,7 @@ class _ImportPreviewScreenState extends ConsumerState<ImportPreviewScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

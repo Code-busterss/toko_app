@@ -1,43 +1,37 @@
 ```
-# Dependencies
+# Flutter/Dart specific
 .dart_tool/
 .packages
-.pub/
+.pub-cache/
+pubspec.lock
 
-# Build
+# Build outputs
 build/
-**/ios/.generated/
-**/android/.generated/
+*.apk
+*.aab
+*.ipa
+*.app
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+*.tmp
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Logs
-*.log
-**/logs
+# Dependencies
+node_modules/
+vendor/
 
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Coverage
-coverage/
-*.coverage
-
-# Temporary files
-*.tmp
-*.temp
 ```
