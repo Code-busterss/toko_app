@@ -161,7 +161,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       elevation: 2,
       child: InkWell(
         onTap: () {
-          context.push('${AppConstants.routeCustomerDetail}/${customer.id}');
+          // Navigate to customer bill products screen
+          context.push(AppConstants.routeCustomerBillProducts, extra: {
+            'customerId': customer.id,
+            'customerName': customer.shopName.isNotEmpty ? customer.shopName : customer.ownerName,
+          });
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -271,16 +275,33 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                       ),
                     ),
                   const SizedBox(height: 8),
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    onPressed: () {
-                      context.push(
-                        AppConstants.routeCustomerEdit,
-                        extra: customer,
-                      );
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.receipt_long, size: 20),
+                        onPressed: () {
+                          context.push(AppConstants.routeCustomerBillProducts, extra: {
+                            'customerId': customer.id,
+                            'customerName': customer.shopName.isNotEmpty ? customer.shopName : customer.ownerName,
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Create Bill',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: () {
+                          context.push(
+                            AppConstants.routeCustomerEdit,
+                            extra: customer,
+                          );
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
                   ),
                 ],
               ),

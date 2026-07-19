@@ -1,14 +1,12 @@
 ﻿// lib/features/dashboard/screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toko_app/core/constants/constants.dart';
 import 'package:toko_app/features/dashboard/providers/dashboard_notifier.dart';
 import 'package:toko_app/features/orders/models/order_model.dart';
 import 'package:toko_app/features/products/models/product_model.dart';
 import 'package:toko_app/shared/models/app_enums.dart';
-
-import '../../../core/constants/constants.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -19,17 +17,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      ref.read(dashboardNotifierProvider.notifier).fetchStats();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final dashboardState = ref.watch(dashboardNotifierProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -42,227 +30,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
       ),
-      body: dashboardState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(dashboardNotifierProvider.notifier).fetchStats();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Error: $error'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  ref.read(dashboardNotifierProvider.notifier).fetchStats();
-                },
-                child: const Text('Retry'),
-              ),
+              _buildQuickActions(context),
+              const SizedBox(height: 24),
+              _buildMainMenu(context),
             ],
           ),
-        ),
-        data: (stats) => RefreshIndicator(
-          onRefresh: () async {
-            await ref.read(dashboardNotifierProvider.notifier).fetchStats();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSummaryCards(context, stats),
-                const SizedBox(height: 24),
-                _buildWeeklySalesChart(context, stats.weeklySales),
-                const SizedBox(height: 24),
-                _buildQuickActions(context),
-                const SizedBox(height: 24),
-                _buildRecentOrders(context, stats.recentOrders),
-                const SizedBox(height: 24),
-                _buildLowStockProducts(context, stats.lowStockProducts),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCards(BuildContext context, DashboardStats stats) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.6,
-      children: [
-        _buildSummaryCard(
-          context,
-          title: "Today's Sales",
-          value: '${AppConstants.currencySymbol} ${stats.todaySales.toStringAsFixed(0)}',
-          icon: Icons.today,
-          color: Colors.blue,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Monthly Sales',
-          value: '${AppConstants.currencySymbol} ${stats.monthlySales.toStringAsFixed(0)}',
-          icon: Icons.calendar_month,
-          color: Colors.green,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Total Orders',
-          value: '${stats.totalOrders}',
-          icon: Icons.shopping_bag,
-          color: Colors.purple,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Pending Orders',
-          value: '${stats.pendingOrders}',
-          icon: Icons.pending,
-          color: Colors.orange,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Pending Payments',
-          value: '${AppConstants.currencySymbol} ${stats.pendingPayments.toStringAsFixed(0)}',
-          icon: Icons.payment,
-          color: Colors.red,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Total Profit',
-          value: '${AppConstants.currencySymbol} ${stats.totalProfit.toStringAsFixed(0)}',
-          icon: Icons.trending_up,
-          color: Colors.teal,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Total Expenses',
-          value: '${AppConstants.currencySymbol} ${stats.totalExpenses.toStringAsFixed(0)}',
-          icon: Icons.money_off,
-          color: Colors.pink,
-        ),
-        _buildSummaryCard(
-          context,
-          title: 'Total Customers',
-          value: '${stats.totalCustomers}',
-          icon: Icons.people,
-          color: Colors.indigo,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(
-      BuildContext context, {
-        required String title,
-        required String value,
-        required IconData icon,
-        required Color color,
-      }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Icon(icon, color: color, size: 24),
-              ],
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeeklySalesChart(BuildContext context, List<double> weeklySales) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Weekly Sales', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          const days = ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'D-1', 'Today'];
-                          if (value.toInt() >= 0 && value.toInt() < days.length) {
-                            return Text(days[value.toInt()], style: const TextStyle(fontSize: 10));
-                          }
-                          return const Text('');
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text('${(value / 1000).toStringAsFixed(0)}k', style: const TextStyle(fontSize: 10));
-                        },
-                      ),
-                    ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: weeklySales.asMap().entries.map((entry) {
-                        return FlSpot(entry.key.toDouble(), entry.value);
-                      }).toList(),
-                      isCurved: true,
-                      color: Theme.of(context).colorScheme.primary,
-                      barWidth: 3,
-                      dotData: const FlDotData(show: true),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -302,7 +84,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     icon: Icons.inventory_2,
                     label: 'Add Product',
                     color: Colors.green,
-                    onTap: () {},
+                    onTap: () {
+                      context.push(AppConstants.routeProductAdd);
+                    },
                   ),
                 ),
               ],
@@ -384,7 +168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildRecentOrders(BuildContext context, List<Order> orders) {
+  Widget _buildMainMenu(BuildContext context) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -392,170 +176,61 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Recent Orders', style: Theme.of(context).textTheme.titleMedium),
-                TextButton(onPressed: () {}, child: const Text('View All')),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (orders.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Text('No orders yet'),
-                ),
-              )
-            else
-              ...orders.map((order) => _buildOrderItem(context, order)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderItem(BuildContext context, Order order) {
-    final statusColor = _getOrderStatusColor(order.status);
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: statusColor.withValues(alpha: 0.1),
-        child: Icon(Icons.shopping_bag, color: statusColor),
-      ),
-      title: Text(
-        order.invoiceNumber,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        AppConstants.dateFormat.format(order.date),
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            '${AppConstants.currencySymbol} ${order.totalAmount.toStringAsFixed(0)}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              order.status.name.toUpperCase(),
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+            Text('Main Menu', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                child: const Icon(Icons.people, color: Colors.blue),
               ),
+              title: const Text('Customers'),
+              subtitle: const Text('Manage customers and create bills'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                context.push(AppConstants.routeCustomers);
+              },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getOrderStatusColor(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return Colors.orange;
-      case OrderStatus.confirmed:
-        return Colors.blue;
-      case OrderStatus.processing:
-        return Colors.purple;
-      case OrderStatus.completed:
-        return Colors.green;
-      case OrderStatus.cancelled:
-        return Colors.red;
-    }
-  }
-
-  Widget _buildLowStockProducts(BuildContext context, List<Product> products) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Low Stock Alert', style: Theme.of(context).textTheme.titleMedium),
-                TextButton(onPressed: () {}, child: const Text('View All')),
-              ],
+            const Divider(),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.green.withValues(alpha: 0.1),
+                child: const Icon(Icons.inventory_2, color: Colors.green),
+              ),
+              title: const Text('Products'),
+              subtitle: const Text('Manage inventory and stock'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                context.push(AppConstants.routeProducts);
+              },
             ),
-            const SizedBox(height: 8),
-            if (products.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Text('All products are well stocked'),
-                ),
-              )
-            else
-              ...products.map((product) => _buildProductItem(context, product)),
+            const Divider(),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.purple.withValues(alpha: 0.1),
+                child: const Icon(Icons.shopping_bag, color: Colors.purple),
+              ),
+              title: const Text('Orders'),
+              subtitle: const Text('View and manage orders'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                context.push(AppConstants.routeOrders);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                child: const Icon(Icons.bar_chart, color: Colors.orange),
+              ),
+              title: const Text('Statistics'),
+              subtitle: const Text('View sales and business analytics'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                context.push(AppConstants.routeStats);
+              },
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProductItem(BuildContext context, Product product) {
-    final stockPercentage = product.minStock > 0
-        ? (product.stock / product.minStock).clamp(0.0, 1.0)
-        : 1.0;
-    final stockColor = stockPercentage < 0.5
-        ? Colors.red
-        : stockPercentage < 1.0
-        ? Colors.orange
-        : Colors.green;
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: stockColor.withValues(alpha: 0.1),
-        child: Icon(Icons.inventory, color: stockColor),
-      ),
-      title: Text(
-        product.name,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'SKU: ${product.sku ?? 'N/A'}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: stockPercentage,
-            backgroundColor: Colors.grey[200],
-            valueColor: AlwaysStoppedAnimation<Color>(stockColor),
-          ),
-        ],
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            '${product.stock} ${product.unit}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: stockColor,
-            ),
-          ),
-          Text(
-            'Min: ${product.minStock}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
       ),
     );
   }

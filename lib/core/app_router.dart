@@ -26,6 +26,9 @@ import 'package:toko_app/features/settings/screens/pin_settings_screen.dart';
 import 'package:toko_app/features/settings/screens/profile_screen.dart';
 import 'package:toko_app/features/settings/screens/backup_restore_screen.dart';
 import 'package:toko_app/features/settings/screens/settings_screen.dart';
+import 'package:toko_app/features/settings/screens/stats_screen.dart';
+import 'package:toko_app/features/orders/screens/customer_bill_products_screen.dart';
+import 'package:toko_app/features/orders/screens/customer_bill_summary_screen.dart';
 import 'package:toko_app/shared/widgets/main_shell.dart';
 
 class _ComingSoonScreen extends StatelessWidget {
@@ -315,6 +318,26 @@ class AppRouter {
       GoRoute(
         path: AppConstants.routeBackupRestore,
         builder: (context, state) => const BackupRestoreScreen(),
+      ),
+      GoRoute(
+        path: AppConstants.routeStats,
+        builder: (context, state) => const StatsScreen(),
+      ),
+      GoRoute(
+        path: AppConstants.routeCustomerBillProducts,
+        builder: (context, state) {
+          final args = state.extra as Map<String, dynamic>?;
+          final customerId = args?['customerId'] as int;
+          final customerName = args?['customerName'] as String;
+          return CustomerBillProductsScreen(
+            customerId: customerId,
+            customerName: customerName,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppConstants.routeCustomerBillSummary,
+        builder: (context, state) => const CustomerBillSummaryScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
