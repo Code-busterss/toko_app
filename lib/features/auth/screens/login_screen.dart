@@ -77,7 +77,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isPinSet = await pinService.isPinSet();
     if (!mounted) return;
     if (isPinSet) {
-      context.go(AppConstants.routePinLock);
+      context.go(AppConstants.routePinLock, extra: <String, dynamic>{
+        'isSettingPin': false,
+      });
     } else {
       context.go(AppConstants.routeDashboard);
     }
