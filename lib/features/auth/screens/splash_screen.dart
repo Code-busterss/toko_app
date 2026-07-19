@@ -78,7 +78,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final isPinSet = await pinService.isPinSet();
     _navigated = true;
     if (isPinSet) {
-      context.go(AppConstants.routePinLock);
+      context.go(AppConstants.routePinLock, extra: <String, dynamic>{
+        'isSettingPin': false,
+      });
     } else {
       context.go(AppConstants.routeDashboard);
     }

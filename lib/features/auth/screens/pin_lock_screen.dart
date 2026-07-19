@@ -1,6 +1,8 @@
 ﻿// lib/features/auth/screens/pin_lock_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:toko_app/core/constants/constants.dart';
 import 'package:toko_app/features/auth/providers/pin_provider.dart';
 import 'package:toko_app/features/auth/services/fingerprint_service.dart';
 
@@ -153,7 +155,10 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
     if (!mounted) return;
     if (isValid) {
       widget.onAuthenticated?.call();
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        // Use GoRouter to navigate to dashboard instead of pop
+        context.go(AppConstants.routeDashboard);
+      }
     } else {
       notifier
         ..clear()
@@ -173,7 +178,10 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
     if (!mounted) return;
     if (authenticated) {
       widget.onAuthenticated?.call();
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        // Use GoRouter to navigate to dashboard instead of pop
+        context.go(AppConstants.routeDashboard);
+      }
     } else {
       notifier.setError('Biometric authentication failed');
     }
@@ -193,6 +201,8 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
   Widget build(BuildContext context) {
     final ui = ref.watch(pinLockUiProvider);
     final isSetting = widget.isSettingPin;
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.height < 600;
 
     return Scaffold(
       appBar: isSetting
@@ -205,128 +215,153 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
             )
           : null,
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 48),
-            Icon(
-              Icons.lock_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              isSetting
-                  ? (ui.isConfirming ? 'Confirm PIN' : 'Enter New PIN')
-                  : 'Enter PIN',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Enter 4-digit PIN',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6),
-                  ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                4,
-                (index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index < ui.pin.length
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      SizedBox(height: isSmallScreen ? 24 : 48),
+                      Icon(
+                        Icons.lock_outline,
+                        size: isSmallScreen ? 48 : 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      SizedBox(height: isSmallScreen ? 16 : 24),
+                      Text(
+                        isSetting
+                            ? (ui.isConfirming ? 'Confirm PIN' : 'Enter New PIN')
+                            : 'Enter PIN',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Enter 4-digit PIN',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: isSmallScreen ? 16 : 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          4,
+                          (index) => Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: index < ui.pin.length
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (ui.errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            ui.errorMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      if (ui.isLoading)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: CircularProgressIndicator(),
+                        ),
+                      _buildNumpad(ui.isLoading, isSmallScreen),
+                      SizedBox(height: isSmallScreen ? 12 : 24),
+                      if (!isSetting && ui.biometricAvailable)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: IconButton(
+                            onPressed:
+                                ui.isLoading ? null : _authenticateWithBiometrics,
+                            iconSize: 48,
+                            icon: Icon(
+                              Icons.fingerprint,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      SizedBox(height: isSmallScreen ? 12 : 24),
+                    ],
                   ),
                 ),
               ),
-            ),
-            if (ui.errorMessage != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                ui.errorMessage!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-            const Spacer(),
-            if (ui.isLoading)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 16),
-                child: CircularProgressIndicator(),
-              ),
-            _buildNumpad(ui.isLoading),
-            const SizedBox(height: 24),
-            if (!isSetting && ui.biometricAvailable)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: IconButton(
-                  onPressed:
-                      ui.isLoading ? null : _authenticateWithBiometrics,
-                  iconSize: 48,
-                  icon: Icon(
-                    Icons.fingerprint,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNumpad(bool disabled) {
+  Widget _buildNumpad(bool disabled, bool isSmallScreen) {
+    final keySize = isSmallScreen ? 64.0 : 80.0;
+    final horizontalPadding = isSmallScreen ? 24.0 : 48.0;
+    final rowSpacing = isSmallScreen ? 12.0 : 16.0;
+    final fontSize = isSmallScreen ? 26.0 : 32.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildKey('1', disabled),
-              _buildKey('2', disabled),
-              _buildKey('3', disabled),
+              _buildKey('1', disabled, keySize, fontSize),
+              _buildKey('2', disabled, keySize, fontSize),
+              _buildKey('3', disabled, keySize, fontSize),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: rowSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildKey('4', disabled),
-              _buildKey('5', disabled),
-              _buildKey('6', disabled),
+              _buildKey('4', disabled, keySize, fontSize),
+              _buildKey('5', disabled, keySize, fontSize),
+              _buildKey('6', disabled, keySize, fontSize),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: rowSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildKey('7', disabled),
-              _buildKey('8', disabled),
-              _buildKey('9', disabled),
+              _buildKey('7', disabled, keySize, fontSize),
+              _buildKey('8', disabled, keySize, fontSize),
+              _buildKey('9', disabled, keySize, fontSize),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: rowSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              const SizedBox(width: 80),
-              _buildKey('0', disabled),
-              _buildBackspace(disabled),
+              SizedBox(width: keySize),
+              _buildKey('0', disabled, keySize, fontSize),
+              _buildBackspace(disabled, keySize),
             ],
           ),
         ],
@@ -334,37 +369,37 @@ class _PinLockScreenState extends ConsumerState<PinLockScreen> {
     );
   }
 
-  Widget _buildKey(String key, bool disabled) {
+  Widget _buildKey(String key, bool disabled, double size, double fontSize) {
     return InkWell(
       onTap: disabled ? null : () => _onKeyTap(key),
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.circular(size / 2),
       child: Container(
-        width: 80,
-        height: 80,
+        width: size,
+        height: size,
         alignment: Alignment.center,
         child: Text(
           key,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: 32,
+                fontSize: fontSize,
               ),
         ),
       ),
     );
   }
 
-  Widget _buildBackspace(bool disabled) {
+  Widget _buildBackspace(bool disabled, double size) {
     return InkWell(
       onTap: disabled
           ? null
           : () => ref.read(pinLockUiProvider.notifier).onBackspace(),
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.circular(size / 2),
       child: Container(
-        width: 80,
-        height: 80,
+        width: size,
+        height: size,
         alignment: Alignment.center,
         child: Icon(
           Icons.backspace_outlined,
-          size: 28,
+          size: size * 0.4,
           color: Theme.of(context).colorScheme.onSurface,
         ),
       ),

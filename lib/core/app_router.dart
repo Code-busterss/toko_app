@@ -90,7 +90,11 @@ class AppRouter {
         name: 'pinLock',
         builder: (context, state) {
           final isSettingPin = (state.extra as Map<String, dynamic>?)?['isSettingPin'] as bool? ?? false;
-          return PinLockScreen(isSettingPin: isSettingPin);
+          final onAuthenticated = (state.extra as Map<String, dynamic>?)?['onAuthenticated'] as VoidCallback?;
+          return PinLockScreen(
+            isSettingPin: isSettingPin,
+            onAuthenticated: onAuthenticated,
+          );
         },
       ),
       ShellRoute(
