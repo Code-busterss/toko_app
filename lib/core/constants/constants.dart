@@ -142,4 +142,7 @@ class AppConstants {
   static const String routeImportPreview = '/import-preview';
   static const String routeAddProduct = '/products/add';
   static const String routeEditProduct = '/products/:id/edit';
+  static const String routeCustomerBillProducts = '/customer-bill-products';
+  static const String routeCustomerBillSummary = '/customer-bill-summary';
+  static const String routeStats = '/settings/stats';
 }

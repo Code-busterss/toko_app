@@ -15,6 +15,16 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
+            leading: const Icon(Icons.bar_chart),
+            title: const Text('Statistics'),
+            subtitle: const Text('View sales and business stats'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              context.push(AppConstants.routeStats);
+            },
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profile'),
             subtitle: const Text('Edit your profile information'),
